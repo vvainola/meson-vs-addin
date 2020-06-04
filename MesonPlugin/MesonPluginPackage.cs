@@ -25,6 +25,7 @@ namespace MesonPlugin
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [Guid(MesonPluginPackage.PackageGuidString)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     public sealed class MesonPluginPackage : AsyncPackage
     {
         /// <summary>
@@ -45,7 +46,8 @@ namespace MesonPlugin
         {
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
-            await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await FirstCommand.InitializeAsync(this);
         }
 
         #endregion
