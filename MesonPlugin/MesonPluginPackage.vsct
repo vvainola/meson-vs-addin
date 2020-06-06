@@ -56,7 +56,7 @@
         <Parent guid="guidMesonPluginPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Invoke MesonMenu</ButtonText>
+          <ButtonText>Configure project</ButtonText>
         </Strings>
       </Button>
     </Buttons>
