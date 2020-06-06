@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" ?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="MesonPlugin.406a6970-3a5c-4f55-ae71-6cfe7e74d268" Version="1.0" Language="en-US" Publisher="Vili Väinölä" />
+    <Identity Id="MesonPlugin.844d547b-f480-4b83-9a8e-0e8bf4f126a3" Version="1.0" Language="en-US" Publisher="Vili Väinölä" />
     <DisplayName>MesonPlugin</DisplayName>
     <Description>Empty VSIX Project.</Description>
   </Metadata>
