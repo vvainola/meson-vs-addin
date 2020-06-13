@@ -7,15 +7,7 @@ using EnvDTE80;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Logging;
-using EnvDTE;
-using System.Linq;
 using System.Xml;
-using System.Windows.Shapes;
-using System.Windows.Forms;
 
 namespace MesonPlugin
 {
@@ -23,6 +15,7 @@ namespace MesonPlugin
     {
         public static (string, int) RunCommand(string cmd)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             // Run the command at the solution root.
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
@@ -69,6 +62,7 @@ namespace MesonPlugin
 
         private void ButtonClickOk(object sender, RoutedEventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             this.Close();
             ConfigureSolution();
             RegenerateSolution();
@@ -76,6 +70,7 @@ namespace MesonPlugin
 
         private static void RegenerateSolution()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             XmlDocument regenProject = new XmlDocument();
             regenProject.Load(Helpers.GetSolutionDirectory() + "\\REGEN.vcxproj");
             string configuration = regenProject.GetElementsByTagName("Configuration").Item(0).InnerText;
