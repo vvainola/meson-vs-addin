@@ -42,15 +42,17 @@ namespace MesonPlugin
     }
     public class MesonOption
     {
-        public MesonOption(String optionName, String description, String value)
+        public MesonOption(String optionName, String description, List<String> availableOptions)
         {
             this.OptionName = optionName;
             this.Description = description;
-            this.Value = value;
+            this.AvailableOptions = availableOptions;
+            this.SelectedOption = this.AvailableOptions[0];
         }
-        public string OptionName { get; set; }
-        public string Description { get; set; }
-        public string Value { get; set; }
+        public String OptionName { get; set; }
+        public String Description { get; set; }
+        public List<String> AvailableOptions { get; set; }
+        public String SelectedOption { get; set; }
     }
 
     public class MesonOptionsModel : INotifyPropertyChanged
@@ -60,7 +62,10 @@ namespace MesonPlugin
         public MesonOptionsModel()
         {
             this.MesonOptions = new ObservableCollection<MesonOption>();
-            MesonOptions.Add(new MesonOption("LTO", "Link time optimization", "False"));
+            List<String> availableOptions = new List<String> { "False", "True" };
+            MesonOption option = new MesonOption("LTO", "Link time optimization", availableOptions);
+            option.SelectedOption = availableOptions[1];
+            MesonOptions.Add(option);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

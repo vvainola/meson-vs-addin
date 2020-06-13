@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
+using System.Windows;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Reflection;
 
 namespace MesonPlugin
 {

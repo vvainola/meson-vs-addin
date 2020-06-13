@@ -14,7 +14,15 @@
                 <GridView>
                     <GridViewColumn Header="Option" Width="Auto" DisplayMemberBinding="{Binding Path=OptionName}"/>
                     <GridViewColumn Header="Description" Width="Auto" DisplayMemberBinding="{Binding Path=Description}"/>
-                    <GridViewColumn Header="Value" Width="Auto" DisplayMemberBinding="{Binding Path=Value}"/>
+                    <GridViewColumn Header="Value" Width="Auto">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding Path=AvailableOptions}"
+                                          SelectedItem="{Binding Path=SelectedOption}"
+                                          IsSynchronizedWithCurrentItem="True"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                 </GridView>
             </ListView.View>
         </ListView>
