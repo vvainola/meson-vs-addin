@@ -1,6 +1,6 @@
 # Visual Studio integration add-in for Meson
 
-This plugin integrates meson (https://mesonbuild.com/) into Visual Studio and allows:
+This plugin integrates Meson (https://mesonbuild.com/) into Visual Studio and allows:
 
 * Configure meson options from inside Visual Studio.
 
