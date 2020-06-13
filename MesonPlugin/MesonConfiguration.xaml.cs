@@ -32,7 +32,7 @@ namespace MesonPlugin
             var dte = (DTE2)Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SDTE));
             string solutionDir = System.IO.Path.GetDirectoryName(dte.Solution.FullName);
 
-            // Run the command at the solution working directory.
+            // Run the command at the solution root.
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.RedirectStandardOutput = true;
