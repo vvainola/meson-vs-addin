@@ -90,7 +90,7 @@ namespace MesonPlugin
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            var configuration = new MesonConfiguration();
+            var configuration = new MesonConfigurationWindow();
             configuration.ShowDialog();
         }
     }

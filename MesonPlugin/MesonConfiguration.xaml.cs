@@ -7,26 +7,29 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
+
 
 namespace MesonPlugin
 {
     /// <summary>
     /// Interaction logic for MesonConfiguration.xaml
     /// </summary>
-    public partial class MesonConfiguration : Window
+    public partial class MesonConfigurationWindow : Window
     {
-        public MesonConfiguration()
+        public MesonConfigurationWindow()
         {
             InitializeComponent();
+            this.DataContext = new MesonOptionsModel();
         }
 
-        private void ButtonClickCancel(object sender, RoutedEventArgs e)
+        private void ButtonClickCancel(object sender, RoutedEventArgs e)            
         {
             this.Close();
         }
@@ -35,5 +38,31 @@ namespace MesonPlugin
         {
             this.Close();
         }
+
+    }
+    public class MesonOption
+    {
+        public MesonOption(String optionName, String description, String value)
+        {
+            this.OptionName = optionName;
+            this.Description = description;
+            this.Value = value;
+        }
+        public string OptionName { get; set; }
+        public string Description { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class MesonOptionsModel : INotifyPropertyChanged
+    {
+        public ObservableCollection<MesonOption> MesonOptions { get; set; }
+
+        public MesonOptionsModel()
+        {
+            this.MesonOptions = new ObservableCollection<MesonOption>();
+            MesonOptions.Add(new MesonOption("LTO", "Link time optimization", "False"));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }
