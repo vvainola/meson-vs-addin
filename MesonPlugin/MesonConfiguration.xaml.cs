@@ -1,37 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
-using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Logging;
+using EnvDTE;
+using System.Linq;
+using System.Xml;
+using System.Windows.Shapes;
 using System.Windows.Forms;
 
 namespace MesonPlugin
 {
-    public static class CommandLineHelper
+    public static class Helpers
     {
         public static (string, int) RunCommand(string cmd)
         {
-            // Get directory of the currently open solution.
-            ThreadHelper.ThrowIfNotOnUIThread();
-            var dte = (DTE2)Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SDTE));
-            string solutionDir = System.IO.Path.GetDirectoryName(dte.Solution.FullName);
-
             // Run the command at the solution root.
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
@@ -39,7 +30,7 @@ namespace MesonPlugin
             startInfo.UseShellExecute = false;
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             startInfo.CreateNoWindow = true;
-            startInfo.WorkingDirectory = solutionDir;
+            startInfo.WorkingDirectory = GetSolutionDirectory();
             startInfo.FileName = "cmd.exe";
             startInfo.Arguments = "/c " + cmd;
             process.StartInfo = startInfo;
@@ -47,6 +38,14 @@ namespace MesonPlugin
             string stdout = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
             return (stdout, process.ExitCode);
+        }
+
+        public static string GetSolutionDirectory()
+        {
+            // Get directory of the currently open solution.
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var dte = (DTE2)Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SDTE));
+            return System.IO.Path.GetDirectoryName(dte.Solution.FullName);
         }
     }
 
@@ -71,6 +70,46 @@ namespace MesonPlugin
         private void ButtonClickOk(object sender, RoutedEventArgs e)
         {
             this.Close();
+            ConfigureSolution();
+            RegenerateSolution();
+        }
+
+        private static void RegenerateSolution()
+        {
+            XmlDocument regenProject = new XmlDocument();
+            regenProject.Load(Helpers.GetSolutionDirectory() + "\\REGEN.vcxproj");
+            string configuration = regenProject.GetElementsByTagName("Configuration").Item(0).InnerText;
+            string platform = regenProject.GetElementsByTagName("Platform").Item(0).InnerText;
+
+            // Find regeneration command from the project
+            string regen_command = "";
+            XmlNode custom = regenProject.GetElementsByTagName("CustomBuild").Item(0);
+            foreach (XmlNode child in custom.ChildNodes)
+            {
+                if (child.Name == "Command")
+                {
+                    regen_command = child.InnerText;
+                }
+            }
+
+            // Get line with vcvarsall.bat call to invoke msbuild which handle the solution regeneration
+            string[] lines = regen_command.Split('\n');
+            foreach (string line in lines)
+            {
+                if (line.Contains("vcvarsall.bat"))
+                {
+                    var (stdout, exitCode) = Helpers.RunCommand(line + " && msbuild REGEN.vcxproj /p:Platform=" + platform + " /p:Configuration=" + configuration);
+                    if (exitCode != 0)
+                    {
+                        System.Windows.MessageBox.Show(stdout);
+                    }
+                }
+
+            }
+        }
+
+        private void ConfigureSolution()
+        {
             string configureOptions = "";
             // These options use "--" prefix instead of "-D" for some reason.
             List<string> weirdOptions = new List<string> { "backend", "buildtype", "unity",
@@ -87,10 +126,10 @@ namespace MesonPlugin
                 }
             }
             ThreadHelper.ThrowIfNotOnUIThread();
-            CommandLineHelper.RunCommand("meson configure " + configureOptions);
+            Helpers.RunCommand("meson configure " + configureOptions);
         }
-
     }
+
     public class MesonOption
     {
         public MesonOption(String optionName, 
@@ -117,7 +156,7 @@ namespace MesonPlugin
             
             this.MesonOptions = new ObservableCollection<MesonOption>();
             ThreadHelper.ThrowIfNotOnUIThread();
-            var mesonIntrospect = CommandLineHelper.RunCommand("meson introspect --buildoptions");
+            var mesonIntrospect = Helpers.RunCommand("meson introspect --buildoptions");
             string stdout = mesonIntrospect.Item1;
             int exitCode = mesonIntrospect.Item2;
             
