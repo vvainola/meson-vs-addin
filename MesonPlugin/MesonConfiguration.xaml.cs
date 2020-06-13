@@ -19,33 +19,36 @@ using EnvDTE80;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
+using System.Windows.Forms;
 
 namespace MesonPlugin
 {
     public static class CommandLineHelper
     {
-        public static string RunCommand(string cmd)
+        public static (string, int) RunCommand(string cmd)
         {
+            // Get directory of the currently open solution.
             ThreadHelper.ThrowIfNotOnUIThread();
             var dte = (DTE2)Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(SDTE));
             string solutionDir = System.IO.Path.GetDirectoryName(dte.Solution.FullName);
 
+            // Run the command at the solution working directory.
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.RedirectStandardOutput = true;
             startInfo.UseShellExecute = false;
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.CreateNoWindow = true;
             startInfo.WorkingDirectory = solutionDir;
             startInfo.FileName = "cmd.exe";
             startInfo.Arguments = "/c " + cmd;
             process.StartInfo = startInfo;
             process.Start();
-            string output = process.StandardOutput.ReadToEnd();
+            string stdout = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
-            return output;
+            return (stdout, process.ExitCode);
         }
     }
-
 
     /// <summary>
     /// Interaction logic for MesonConfiguration.xaml
@@ -69,9 +72,12 @@ namespace MesonPlugin
         {
             this.Close();
             string configureOptions = "";
+            // These options use "--" prefix instead of "-D" for some reason.
+            List<string> weirdOptions = new List<string> { "backend", "buildtype", "unity",
+                "layout", "default-library", "warnlevel"};
             foreach (MesonOption option in OptionsModel.MesonOptions)
             {
-                if (option.Section == "core")
+                if (weirdOptions.Contains(option.OptionName))
                 {
                     configureOptions += " --" + option.OptionName + "=" + option.SelectedOption;
                 }
@@ -90,20 +96,17 @@ namespace MesonPlugin
         public MesonOption(String optionName, 
             String description, 
             List<String> availableOptions, 
-            string selectedOption,
-            string section)
+            string selectedOption)
         {
             this.OptionName = optionName;
             this.Description = description;
             this.AvailableOptions = availableOptions;
             this.SelectedOption = selectedOption;
-            this.Section = section;
         }
         public String OptionName { get; set; }
         public String Description { get; set; }
         public List<String> AvailableOptions { get; set; }
         public String SelectedOption { get; set; }
-        public String Section { get; set; }
     }
 
     public class MesonOptionsModel : INotifyPropertyChanged
@@ -114,13 +117,25 @@ namespace MesonPlugin
             
             this.MesonOptions = new ObservableCollection<MesonOption>();
             ThreadHelper.ThrowIfNotOnUIThread();
-            string mesonBuildOptions = CommandLineHelper.RunCommand("meson introspect --buildoptions").Trim();
+            var mesonIntrospect = CommandLineHelper.RunCommand("meson introspect --buildoptions");
+            string stdout = mesonIntrospect.Item1;
+            int exitCode = mesonIntrospect.Item2;
+            
+            if (exitCode != 0)
+            {
+                // Something went wrong, show error message. Maybe solution is not meson generated.
+                System.Windows.MessageBox.Show(stdout);
+                return;
+            }
 
-            JArray parsedOptions = JArray.Parse(@mesonBuildOptions);
+            JArray parsedOptions = JArray.Parse(@stdout);
             foreach (JObject option in parsedOptions)
             {
                 string type = option.GetValue("type").ToString();
-                if (type != "combo" && type != "boolean")
+                // Skip non-boolean/combo options since the window to change option does not yet support different types
+                // in the value column. Also skip build machine options because I'm not sure when they are needed.
+                bool build_machine_option = option.GetValue("machine").ToString() == "build";
+                if ((type != "combo" && type != "boolean") || build_machine_option)
                 {
                     continue;
                 }
@@ -139,9 +154,7 @@ namespace MesonPlugin
                 string optionName = option.GetValue("name").ToString();
                 string description = option.GetValue("description").ToString();
                 string selectedOption = option.GetValue("value").ToString();
-                string section = option.GetValue("section").ToString();
-                MesonOption new_opt = new MesonOption(optionName, description, availableOptions, selectedOption, section);
-                MesonOptions.Add(new_opt);
+                MesonOptions.Add(new MesonOption(optionName, description, availableOptions, selectedOption));
             }
         }
 
