@@ -17,14 +17,14 @@
                  ItemsSource="{Binding MesonOptions}" IsSynchronizedWithCurrentItem="True" Grid.ColumnSpan="2">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Option" Width="Auto" DisplayMemberBinding="{Binding Path=OptionName}"/>
+                    <GridViewColumn Header="Option" Width="Auto" DisplayMemberBinding="{Binding Path=Name}"/>
                     <GridViewColumn Header="Description" Width="Auto" DisplayMemberBinding="{Binding Path=Description}"/>
                     <GridViewColumn Header="Value" Width="115">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <ComboBox ItemsSource="{Binding Path=AvailableOptions}"
-                                          SelectedItem="{Binding Path=SelectedOption}"
-                                          IsSynchronizedWithCurrentItem="True"
+                                          Text="{Binding Path=SelectedOption}"
+                                          IsEditable="{Binding Path=Editable}"
                                           Width="100"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

@@ -105,42 +105,65 @@ namespace MesonPlugin
 
         private void ConfigureSolution()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             string configureOptions = "";
             // These options use "--" prefix instead of "-D" for some reason.
             List<string> weirdOptions = new List<string> { "backend", "buildtype", "unity",
                 "layout", "default-library", "warnlevel"};
+            // These options are skipped because they are not used in windows
+            List<string> skippedOptions = new List<string> { "install_umask" };
             foreach (MesonOption option in OptionsModel.MesonOptions)
             {
-                if (weirdOptions.Contains(option.OptionName))
+                if (weirdOptions.Contains(option.Name))
                 {
-                    configureOptions += " --" + option.OptionName + "=" + option.SelectedOption;
+                    configureOptions += " --" + option.Name + "=" + option.SelectedOption;
+                }
+                else if (skippedOptions.Contains(option.Name))
+                {
+                    // Do nothing
                 }
                 else
                 {
-                    configureOptions += " -D" + option.OptionName + "=" + option.SelectedOption;
+                    if (option.SelectedOption != "[]") // Do nothing if the value is an empty list
+                    {
+                        configureOptions += " -D" + option.Name + "=" + option.SelectedOption;
+                    }
                 }
             }
-            ThreadHelper.ThrowIfNotOnUIThread();
-            Helpers.RunCommand("meson configure " + configureOptions);
+            configureOptions = configureOptions.Replace(System.Environment.NewLine, "");
+            configureOptions = configureOptions.Replace("[", "");
+            configureOptions = configureOptions.Replace("]", "");
+            // This might be slightly dangerous but it is needed because in the lists there are two spaces between
+            // values whereas they should be comma-separated with no sapces
+            configureOptions = configureOptions.Replace("  ", "");
+
+            var (stdout, exitCode) = Helpers.RunCommand("meson configure " + configureOptions);
+            if (exitCode != 0)
+            {
+                System.Windows.MessageBox.Show("Configure command \"meson configure " + configureOptions + "\"\n failed" + stdout);
+            }
         }
     }
 
     public class MesonOption
     {
-        public MesonOption(String optionName, 
+        public MesonOption(String name, 
             String description, 
             List<String> availableOptions, 
-            string selectedOption)
+            string selectedOption,
+            bool editable)
         {
-            this.OptionName = optionName;
+            this.Name = name;
             this.Description = description;
             this.AvailableOptions = availableOptions;
             this.SelectedOption = selectedOption;
+            this.Editable = editable;
         }
-        public String OptionName { get; set; }
+        public String Name { get; set; }
         public String Description { get; set; }
         public List<String> AvailableOptions { get; set; }
         public String SelectedOption { get; set; }
+        public bool Editable { get; set; }
     }
 
     public class MesonOptionsModel : INotifyPropertyChanged
@@ -166,29 +189,30 @@ namespace MesonPlugin
             foreach (JObject option in parsedOptions)
             {
                 string type = option.GetValue("type").ToString();
-                // Skip non-boolean/combo options since the window to change option does not yet support different types
-                // in the value column. Also skip build machine options because I'm not sure when they are needed.
-                bool build_machine_option = option.GetValue("machine").ToString() == "build";
-                if ((type != "combo" && type != "boolean") || build_machine_option)
+                // Skip build machine options because I'm not sure when they are needed.
+                if (option.GetValue("machine").ToString() == "build")
                 {
                     continue;
                 }
 
                 List<String> availableOptions = new List<String>();
+                bool editable = false;
                 if (type == "combo") 
                 {
                     availableOptions = option.GetValue("choices").ToObject<List<string>>();
-                   
                 }
                 else if (type == "boolean") 
                 {
                     availableOptions = new List<String> { "False", "True" };
-                  
                 }
-                string optionName = option.GetValue("name").ToString();
+                else
+                {
+                    editable = true;
+                }
+                string name = option.GetValue("name").ToString();
                 string description = option.GetValue("description").ToString();
                 string selectedOption = option.GetValue("value").ToString();
-                MesonOptions.Add(new MesonOption(optionName, description, availableOptions, selectedOption));
+                MesonOptions.Add(new MesonOption(name, description, availableOptions, selectedOption, editable));
             }
         }
 
