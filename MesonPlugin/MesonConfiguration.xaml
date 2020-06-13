@@ -4,17 +4,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MesonPlugin"
-             mc:Ignorable="d" Height="446.323" Width="554.545">
+             mc:Ignorable="d" Height="797" Width="868.886"
+        Title="Solution options">
     <Grid HorizontalAlignment="Left" Margin="10,10,0,8" Width="535">
-        <Button Click="ButtonClickCancel" Content="Cancel" HorizontalAlignment="Left" Margin="450,370,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button Click="ButtonClickOk" Content="Ok" HorizontalAlignment="Left" Margin="370,370,0,0" VerticalAlignment="Top" Width="75"/>
-        <ListView HorizontalAlignment="Left" Height="340" Margin="10,10,0,0" VerticalAlignment="Top" Width="515"
-                 ItemsSource="{Binding MesonOptions}" IsSynchronizedWithCurrentItem="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="29*"/>
+            <ColumnDefinition Width="78*"/>
+        </Grid.ColumnDefinitions>
+        <Button Click="ButtonClickCancel" Content="Cancel" HorizontalAlignment="Left" Margin="520,715,-205,0" VerticalAlignment="Top" Width="75" Grid.Column="1" RenderTransformOrigin="-0.267,0.25"/>
+        <Button Click="ButtonClickOk" Content="Ok" HorizontalAlignment="Left" Margin="610,715,-295,0" VerticalAlignment="Top" Width="75" Grid.Column="1"/>
+        <ListView HorizontalAlignment="Left" Height="700" Margin="10,10,-305,0" VerticalAlignment="Top" Width="830"
+                 ItemsSource="{Binding MesonOptions}" IsSynchronizedWithCurrentItem="True" Grid.ColumnSpan="2">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Option" Width="Auto" DisplayMemberBinding="{Binding Path=OptionName}"/>
                     <GridViewColumn Header="Description" Width="Auto" DisplayMemberBinding="{Binding Path=Description}"/>
-                    <GridViewColumn Header="Value" Width="Auto">
+                    <GridViewColumn Header="Value" Width="300">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <ComboBox ItemsSource="{Binding Path=AvailableOptions}"
