@@ -19,12 +19,13 @@
                 <GridView>
                     <GridViewColumn Header="Option" Width="Auto" DisplayMemberBinding="{Binding Path=OptionName}"/>
                     <GridViewColumn Header="Description" Width="Auto" DisplayMemberBinding="{Binding Path=Description}"/>
-                    <GridViewColumn Header="Value" Width="300">
+                    <GridViewColumn Header="Value" Width="115">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <ComboBox ItemsSource="{Binding Path=AvailableOptions}"
                                           SelectedItem="{Binding Path=SelectedOption}"
-                                          IsSynchronizedWithCurrentItem="True"/>
+                                          IsSynchronizedWithCurrentItem="True"
+                                          Width="100"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
